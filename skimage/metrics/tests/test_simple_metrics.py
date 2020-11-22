@@ -16,9 +16,24 @@ cam_noisy = cam_noisy.astype(cam.dtype)
 
 
 def test_PSNR_vs_IPOL():
-    # Tests vs. imdiff result from the following IPOL article and code:
-    # https://www.ipol.im/pub/art/2011/g_lmii/
-    p_IPOL = 22.4497
+    """ Tests vs. imdiff result from the following IPOL article and code:
+    https://www.ipol.im/pub/art/2011/g_lmii/.
+
+    Notes
+    -----
+    To generate p_IPOL, we need a local copy of cam_noisy:
+
+    >>> from skimage import io
+    >>> io.imsave('/tmp/cam_noisy.png', cam_noisy)
+
+    Then, we use the following command:
+    $ ./imdiff -m psnr <path to camera.png>/camera.png /tmp/cam_noisy.png
+
+    Values for current data.camera() calculated by Gregory Lee on Sep, 2020.
+    Available at:
+    https://github.com/scikit-image/scikit-image/pull/4913#issuecomment-700653165
+    """
+    p_IPOL = 22.409353363576034
     p = peak_signal_noise_ratio(cam, cam_noisy)
     assert_almost_equal(p, p_IPOL, decimal=4)
 
@@ -36,8 +51,8 @@ def test_PSNR_float():
 
     # mismatched dtype results in a warning if data_range is unspecified
     with expected_warnings(['Inputs have mismatched dtype']):
-        p_mixed = peak_signal_noise_ratio(
-            cam / 255., np.float32(cam_noisy / 255.))
+        p_mixed = peak_signal_noise_ratio(cam / 255.,
+                                          np.float32(cam_noisy / 255.))
     assert_almost_equal(p_mixed, p_float64, decimal=5)
 
 
@@ -50,12 +65,16 @@ def test_PSNR_errors():
 def test_NRMSE():
     x = np.ones(4)
     y = np.asarray([0., 2., 2., 2.])
-    assert_equal(normalized_root_mse(y, x, 'mean'), 1 / np.mean(y))
-    assert_equal(normalized_root_mse(y, x, 'Euclidean'), 1 / np.sqrt(3))
-    assert_equal(normalized_root_mse(y, x, 'min-max'), 1 / (y.max() - y.min()))
+    assert_equal(normalized_root_mse(y, x, normalization='mean'),
+                 1 / np.mean(y))
+    assert_equal(normalized_root_mse(y, x, normalization='euclidean'),
+                 1 / np.sqrt(3))
+    assert_equal(normalized_root_mse(y, x, normalization='min-max'),
+                 1 / (y.max() - y.min()))
 
     # mixed precision inputs are allowed
-    assert_almost_equal(normalized_root_mse(y, np.float32(x), 'min-max'),
+    assert_almost_equal(normalized_root_mse(y, np.float32(x),
+                                            normalization='min-max'),
                         1 / (y.max() - y.min()))
 
 
@@ -75,4 +94,4 @@ def test_NRMSE_errors():
         normalized_root_mse(x[:-1], x)
     # invalid normalization name
     with testing.raises(ValueError):
-        normalized_root_mse(x, x, 'foo')
+        normalized_root_mse(x, x, normalization='foo')
