@@ -30,6 +30,12 @@ def read_and_check_img(filepath):
         raise Exception("Expect a .jpg image. Received something else.")
     print("Reading image " + filepath)
     img = plt.imread(filepath)
+    # temp fix to make sure img is not filled with uint8
+    newImg = np.zeros(img.shape)
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            newImg[i,j] = img[i,j]
+    img = newImg
     assert is_grayscale(img), "Image must be grayscale."
     if len(img.shape) != 2:
         img = img[:,:,0]
