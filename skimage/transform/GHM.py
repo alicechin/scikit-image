@@ -13,19 +13,17 @@ def calc_C_T_mtx(m, n, A, B, dist, cdf):
         A_cdf = helper.calc_cdf(A)
         B_cdf = helper.calc_cdf(B)
 
-        # T is already initialized to zeros.
 
         # initialize C
         for j in range(n):
             C[0, j] = helper.row_cost(A_cdf, B_cdf, 0, 0, j, dist)
+        # T is already initialized to zeros.
         print("Finished initializing C and T. in CDF")
 
 
         # fill out rest of C and T
         for i in range(1, m):
-    #         print("i:", i)
             for j in range(n):
-    #             print("j:", j)
                 index_min_cost_of_prev_row = np.argmin(C[i-1, :j + 1])
                 min_cost_of_prev_row = C[i-1, index_min_cost_of_prev_row]
                 cost_of_setting_indicator_in_col_j = helper.row_cost(A_cdf, B_cdf, i, j, j, dist)
@@ -36,24 +34,25 @@ def calc_C_T_mtx(m, n, A, B, dist, cdf):
         C = np.zeros((m, n))
         T = np.zeros((m, n), dtype=np.int64)
 
-        # T is already initialized to zeros.
-
         # initialize C
         for j in range(n):
             C[0, j] = helper.row_cost(A, B, 0, 0, j, dist)
+        # T is already initialized to zeros.
         print("Finished initializing C and T.")
 
         # fill out rest of C and T
         for i in range(1, m):
-    #         print("i:", i)
             for j in range(n):
-    #             print("j:", j)
                 prev_row_costs = [helper.row_cost(A, B, i, jj+1, j, dist) for jj in range(0, j+1)]
                 costs = [C[i-1, jj] + prev_row_costs[jj] for jj in range(0,j+1)]
                 costs = [helper.row_cost(A, B, i , 0, j, dist)] + costs
-                C[i, j] = min(costs)
-                T[i, j] = np.argmin(costs)
-        
+                argmin = np.argmin(costs)
+                C[i, j] = costs[argmin]
+                T[i, j] = argmin - 1 # argmin is between 0 (inclusive) and n (inclusive) but it should be between -1 (inclusive) and (n-1) (inclusive)
+        assert helper.check_M_pdf(M), "Invalid M matrix"
+        assert helper.check_C_pdf(C), "Invalid C matrix"
+        assert helper.check_T_pdf(T), "Invalid T matrix"
+    print("Finished finding C and T.")
     return C, T
             
 
@@ -70,18 +69,13 @@ def find_mapping(A, B, dist='L1', cdf=False):
     assert k_1 == k_2, "The number of columns (histograms) in A and B must match."
     k = k_1
     
-    print(m)
-    print(n)
-    print(k)
-    
     C, T = calc_C_T_mtx(m, n, A, B, dist, cdf)
     
     M = np.zeros((m, n), dtype=np.int64)
-
-    print("Finished finding C and T.")
     
     # find path in M from T
     j = n-1
+    jj = n-1
     for i in range(m-1, 0, -1): # starting from bottom row, going to all but top and looking at each row in T and the row above it
         jj = T[i,j]
         M[i, jj+1:j+1] = 1
@@ -98,6 +92,7 @@ def find_mapping(A, B, dist='L1', cdf=False):
     print("Done finding mapping")
     return mapping, C, T, M
 
+# TODO decide what file formats we accept. Currently we do jpg. See https://matplotlib.org/3.1.0/api/_as_gen/matplotlib.pyplot.imread.html See "Notes".
 
 #GHM and cdfGHM
 def GHM(imgA, imgB, dist='L1'):
