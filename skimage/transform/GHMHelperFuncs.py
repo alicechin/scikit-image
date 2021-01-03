@@ -1,7 +1,5 @@
 import os
 import numpy as np
-from nibabel.testing import data_path
-import nibabel as nib
 import matplotlib.pyplot as plt
 
 #GENERAL IMAGES HELPER FUNCTIONS

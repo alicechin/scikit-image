@@ -1,7 +1,8 @@
-from GHM import GHM
-from GHMHelperFuncs import read_and_check_img
+from GHM import *
+from GHMHelperFuncs import *
 
 house = read_and_check_img("house.jpg")
 streetlights = read_and_check_img("streetlights.jpg")
 
-matched = GHM(house, streetlights)
+matched = cdfGHM(house, streetlights)
+show_img(matched)
